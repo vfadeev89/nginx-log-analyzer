@@ -1,2 +1,9 @@
-# otus-python-0218
-Solutions for "Python developer" course at otus.ru. Group 2018-02.
+# Python Developer course. Group Python-2018-02
+Solutions.
+
+### Author
+Vasilii Fadeev
+
+slack: Vasilii Fadeev (v.fadeev
+
+email: vfadeev89@mail.ru
