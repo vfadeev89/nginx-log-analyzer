@@ -4,6 +4,6 @@ Solutions.
 ### Author
 Vasilii Fadeev
 
-slack: Vasilii Fadeev (v.fadeev
+slack: Vasilii Fadeev (v.fadeev)
 
 email: vfadeev89@mail.ru
