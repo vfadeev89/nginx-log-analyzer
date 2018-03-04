@@ -213,11 +213,12 @@ def main(args):
             save_report(reports_dir, report_template,
                         get_report_date(latest_log_file_path), report_data)
             update_ts_file(config_file["TS_FILE"])
+
+            logging.info("All done!")
         except RuntimeError as error:
             logging.error("Script stopped abnormally by error: {}".format(error.message))
     except BaseException as base_e:
         logging.exception(base_e)
-    logging.info("All done!")
 
 
 def parse_sys_args():
