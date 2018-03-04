@@ -2,15 +2,14 @@
 Решение домашнего задания №1.
 
 Пример запуска:
-  - python log_analyzer.py -h
+  - `python log_analyzer.py`
   - Параметры запуска:
-      - -c <путь к конфигурационному файлу>
-      - -l <путь для логов скрипта>
+      - `-h` для справки
+      - `-c <путь к конфигурационному файлу>`
+      - `-l <путь для записи логов скрипта>`
 
 Запуск тестов:
-  - python log_analyzer_tests.py -v
+  - `python log_analyzer_tests.py -v`
 
 ### Автор
 slack: Vasilii Fadeev (v.fadeev)
-
-email: vfadeev89@mail.ru
