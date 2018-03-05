@@ -9,6 +9,7 @@ import gzip
 import logging
 import collections
 import time
+import glob
 from datetime import datetime
 
 # log_format ui_short '$remote_addr $remote_user $http_x_real_ip [$time_local] "$request" '
@@ -55,12 +56,8 @@ def load_config(path):
     return result
 
 
-def simple_search(something, in_source):
-    return something in in_source
-
-
 def get_latest_log_file_path(log_dir, name_pattern):
-    list_of_files = [f for f in os.listdir(log_dir) if simple_search(name_pattern, f)]
+    list_of_files = glob.glob("{}/{}*".format(log_dir, name_pattern))
     if not list_of_files:
         raise StandardError("Log folder {} is empty.".format(log_dir))
 
