@@ -43,9 +43,7 @@ def load_config(path):
         try:
             with open(path, 'r') as f:
                 try:
-                    data = json.load(f)
-                    for key in data:
-                        result[key] = data[key]
+                    result.update(json.load(f))
                 except ValueError as value_error:
                     logging.info(
                         "Config file {} has invalid format. Using default config.\n{}".format(path, value_error))
@@ -61,8 +59,7 @@ def get_latest_log_file_path(log_dir, name_pattern):
     if not list_of_files:
         raise StandardError("Log folder {} is empty.".format(log_dir))
 
-    latest_file_name = max(list_of_files, key=lambda f: re.findall("(\d{8})", f))
-    return os.path.join(log_dir, latest_file_name)
+    return max(list_of_files, key=lambda f: re.findall("(\d{8})", f))
 
 
 def xreadlines(path):
