@@ -23,18 +23,9 @@ config = {
     "REPORT_TEMPLATE": "report-{date}.html",
     "LOG_DIR": "./log",
     "LOG_NAME_PATTERN": "nginx-access-ui.log-*",
-    "ALLOW_ERRORS_COUNT": 100,
+    "ERRORS_LIMIT": 100,
     "TS_FILE": "./log_analyzer.ts"
 }
-error_count = 0
-
-
-def track_parsing_error():
-    global error_count
-    error_count += 1
-    logging.info("Incremented error_counter " + str(error_count))
-    if error_count >= config["ALLOW_ERRORS_COUNT"]:
-        raise RuntimeError("Too many lines in log file are corrupted.")
 
 
 def load_config(path):
@@ -72,7 +63,8 @@ def xreadlines(path):
     log_file.close()
 
 
-def apply_filters(source, filters):
+def apply_filters(source, errors_limit, *filters):
+    n_errors = 0
     for string_dict in source:
         result = {}
         for k in string_dict:
@@ -80,15 +72,17 @@ def apply_filters(source, filters):
                 if k == f["key"]:
                     try:
                         result[k] = f["func"](string_dict[k])
-                    except Exception:
+                    except BaseException:
                         logging.error("Error occurs in: {}".format(string_dict))
-                        track_parsing_error()
+                        n_errors += 1
+                        if n_errors >= errors_limit:
+                            raise RuntimeError("Too many lines in log file are corrupted.")
 
         if result:
             yield result
 
 
-def parse_log(path):
+def parse_log(path, errors_limit):
     pattern = re.compile(
         r"(?P<remote_addr>[\d\.]+)\s"
         r"(?P<remote_user>\S*)\s+"
@@ -105,13 +99,13 @@ def parse_log(path):
         r"(?P<request_time>\d+\.\d+)\s*"
     )
     log_lines = xreadlines(path)
+
     parsed_line_dict = (pattern.match(line).groupdict() for line in log_lines)
 
     requests_filter = dict(key="request", func=lambda req: req.split(" ")[1])
     requests_time_filter = dict(key="request_time", func=float)
-    filters = [requests_filter, requests_time_filter]
 
-    return apply_filters(parsed_line_dict, filters)
+    return apply_filters(parsed_line_dict, errors_limit, requests_filter, requests_time_filter)
 
 
 def median(lst):
@@ -187,26 +181,32 @@ def main(args):
         setup_logging(args.logging_file)
         config_file = load_config(args.custom_config)
 
+        report_size = config_file["REPORT_SIZE"]
+        report_dir = config_file["REPORT_DIR"]
+        report_template = config_file["REPORT_TEMPLATE"]
+        log_dir = config_file["LOG_DIR"]
+        name_pattern = config_file["LOG_NAME_PATTERN"]
+        errors_limit = config_file["ERRORS_LIMIT"]
+        ts_file = config_file["TS_FILE"]
+
         try:
-            latest_log_file_path = get_latest_log_file_path(config_file["LOG_DIR"], config_file["LOG_NAME_PATTERN"])
+            latest_log_file_path = get_latest_log_file_path(log_dir, name_pattern)
         except StandardError as error:
             logging.info(error.message)
             return
 
-        reports_dir = config_file["REPORT_DIR"]
-        report_template = config_file["REPORT_TEMPLATE"]
-
-        if is_report_exists(reports_dir, report_template, latest_log_file_path):
+        if is_report_exists(report_dir, report_template, latest_log_file_path):
             logging.info("Report for {} already exists.".format(latest_log_file_path))
             return
 
         logging.info("Starting analysing log file: {}".format(latest_log_file_path))
         try:
-            parsed_log = parse_log(latest_log_file_path)
-            report_data = analyze_log(parsed_log, config_file["REPORT_SIZE"])
-            save_report(reports_dir, report_template,
+            parsed_log = parse_log(latest_log_file_path, errors_limit)
+            report_data = analyze_log(parsed_log, report_size)
+            save_report(report_dir, report_template,
                         get_report_date(latest_log_file_path), report_data)
-            update_ts_file(config_file["TS_FILE"])
+
+            update_ts_file(ts_file)
 
             logging.info("All done!")
         except RuntimeError as error:
