@@ -22,7 +22,7 @@ config = {
     "REPORT_DIR": "./reports",
     "REPORT_TEMPLATE": "report-{date}.html",
     "LOG_DIR": "./log",
-    "LOG_NAME_PATTERN": "nginx-access-ui.log",
+    "LOG_NAME_PATTERN": "nginx-access-ui.log-*",
     "ALLOW_ERRORS_COUNT": 100,
     "TS_FILE": "./log_analyzer.ts"
 }
@@ -55,7 +55,7 @@ def load_config(path):
 
 
 def get_latest_log_file_path(log_dir, name_pattern):
-    list_of_files = glob.glob("{}*".format(os.path.join(log_dir, name_pattern)))
+    list_of_files = glob.glob(os.path.join(log_dir, name_pattern))
     if not list_of_files:
         raise StandardError("Log folder {} is empty.".format(log_dir))
 
