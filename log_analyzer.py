@@ -55,7 +55,7 @@ def load_config(path):
 
 
 def get_latest_log_file_path(log_dir, name_pattern):
-    list_of_files = glob.glob("{}/{}*".format(log_dir, name_pattern))
+    list_of_files = glob.glob("{}*".format(os.path.join(log_dir, name_pattern)))
     if not list_of_files:
         raise StandardError("Log folder {} is empty.".format(log_dir))
 
