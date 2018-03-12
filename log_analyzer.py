@@ -11,6 +11,7 @@ import collections
 import time
 import glob
 from datetime import datetime
+from string import Template
 
 # log_format ui_short '$remote_addr $remote_user $http_x_real_ip [$time_local] "$request" '
 #                     '$status $body_bytes_sent "$http_referer" '
@@ -148,7 +149,7 @@ def save_report(path, report_template, report_date, data):
     with open(os.path.join(path, report_template), 'r') as f:
         f_data = f.read()
 
-    result = f_data.replace("$table_json", json.dumps(data))
+    result = Template(f_data).safe_substitute(table_json=json.dumps(data))
     with open(os.path.join(path, report_template.format(date=report_date)), 'w') as f:
         f.write(result)
 
