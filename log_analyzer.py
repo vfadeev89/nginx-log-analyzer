@@ -64,21 +64,18 @@ def xreadlines(path):
     log_file.close()
 
 
-def apply_filters(source, errors_limit, *filters):
+def apply_filters(source, errors_limit, filters):
     n_errors = 0
     for string_dict in source:
         result = {}
-        for k in string_dict:
-            for f in filters:
-                if k == f["key"]:
-                    try:
-                        result[k] = f["func"](string_dict[k])
-                    except BaseException:
-                        logging.error("Error occurs in: {}".format(string_dict))
-                        n_errors += 1
-                        if n_errors >= errors_limit:
-                            raise RuntimeError("Too many lines in log file are corrupted.")
-
+        for key, filter_func in filters.iteritems():
+            try:
+                result[key] = filter_func(string_dict[key])
+            except BaseException:
+                logging.error("Error occurs in: {}".format(string_dict))
+                n_errors += 1
+                if n_errors >= errors_limit:
+                    raise RuntimeError("Too many lines in log file are corrupted.")
         if result:
             yield result
 
@@ -103,10 +100,12 @@ def parse_log(path, errors_limit):
 
     parsed_line_dict = (pattern.match(line).groupdict() for line in log_lines)
 
-    requests_filter = dict(key="request", func=lambda req: req.split(" ")[1])
-    requests_time_filter = dict(key="request_time", func=float)
+    filters = {
+        "request": lambda req: req.split(" ")[1],
+        "request_time": float
+    }
 
-    return apply_filters(parsed_line_dict, errors_limit, requests_filter, requests_time_filter)
+    return apply_filters(parsed_line_dict, errors_limit, filters)
 
 
 def median(lst):
